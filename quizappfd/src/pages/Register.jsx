@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 function Register() {
   const [form, setForm] = useState({
@@ -11,6 +12,8 @@ function Register() {
     profilePic: null,
     idCard: null
   });
+
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -29,9 +32,15 @@ function Register() {
     }
 
     try {
-      await axios.post('http://localhost:5000/api/auth/register', formData);
+      const response = await axios.post('http://localhost:5000/api/auth/register', formData);
+
+      // ✅ Server response contains stored profile picture name
+      if (response.data.profilePic) {
+        localStorage.setItem("profilePic", response.data.profilePic);
+      }
+
       alert("Registration Successful! Check your email for the password.");
-      // Redirect to login page later
+      navigate("/login");
     } catch (error) {
       console.error(error);
       alert("Registration failed. Please try again.");
@@ -47,13 +56,13 @@ function Register() {
         <input type="text" name="phone" placeholder="Phone Number" onChange={handleChange} required /><br /><br />
         <input type="text" name="collegeName" placeholder="College Name" onChange={handleChange} required /><br /><br />
         <input type="text" name="collegeID" placeholder="College ID" onChange={handleChange} required /><br /><br />
-        
+
         <label>Upload Profile Picture (50KB - 250KB)</label><br />
         <input type="file" name="profilePic" accept="image/*" onChange={handleFileChange} required /><br /><br />
 
         <label>Upload College ID Card (100KB - 500KB)</label><br />
         <input type="file" name="idCard" accept="image/*" onChange={handleFileChange} required /><br /><br />
-        
+
         <button type="submit">Register</button>
       </form>
     </div>
