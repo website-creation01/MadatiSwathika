@@ -1,32 +1,37 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import "./Dashboard.css";
+import "./Header.css";
 
 function Header() {
-  const [showDropdown, setShowDropdown] = useState(false);
-  const navigate = useNavigate();
+  const [showMenu, setShowMenu] = useState(false);
   const profilePic = localStorage.getItem("profilePic");
 
-  const handleLogout = () => {
-    localStorage.clear();
-    navigate("/login");
+  const toggleMenu = () => {
+    setShowMenu(!showMenu);
   };
 
   return (
-    <div className="topbar">
-      <img
-        src={`http://localhost:5000/uploads/${profilePic}`}
-        alt="Profile"
-        className="profile-pic"
-        onClick={() => setShowDropdown(!showDropdown)}
-      />
-      {showDropdown && (
-        <div className="dropdown">
-          <div onClick={() => navigate("/profile")}>👤 My Profile</div>
-          <div onClick={() => navigate("/change-password")}>🔑 Change Password</div>
-          <div onClick={handleLogout}>🚪 Logout</div>
-        </div>
-      )}
+    <div className="header">
+      <div className="profile-container" onClick={toggleMenu}>
+        <img
+          src={`http://localhost:5000/uploads/${profilePic}`}
+          alt="Profile"
+          className="profile-pic"
+        />
+        {showMenu && (
+          <div className="dropdown">
+            <div>👤 My Profile</div>
+            <div>🔑 Change Password</div>
+            <div
+              onClick={() => {
+                localStorage.clear();
+                window.location.href = "/login";
+              }}
+            >
+              🚪 Logout
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

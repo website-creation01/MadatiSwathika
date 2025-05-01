@@ -1,13 +1,15 @@
-// src/pages/Results.jsx
 import React from 'react';
 
 function Results() {
-  // This is a placeholder component
-  // You can later replace this with real results fetched from backend
+  const result = JSON.parse(localStorage.getItem('lastResult'));
+  if (!result) return <p>No result found.</p>;
+
   return (
-    <div>
-      <h2>📊 Your Results</h2>
-      <p>No results available yet. Complete a test to see results here.</p>
+    <div style={{ padding: '20px' }}>
+      <h2>Results</h2>
+      <p>Score: {result.score} / {result.total}</p>
+      <p>Percentage: {result.percentage}%</p>
+      {/* Add rank if you implement it */}
     </div>
   );
 }

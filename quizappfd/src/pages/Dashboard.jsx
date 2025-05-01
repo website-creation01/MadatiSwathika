@@ -1,27 +1,25 @@
 import React from "react";
-import { Link, Outlet } from "react-router-dom";
-import Header from "./Header";
+import { Outlet } from "react-router-dom";
 import "./Dashboard.css";
+import Header from "./Header";
 
 function Dashboard() {
   return (
     <div className="dashboard-container">
-      {/* Left Sidebar */}
       <aside className="sidebar">
         <h2>📘 Dashboard</h2>
-        <nav>
-          <Link to="/dashboard/courses">My Courses</Link>
-          <Link to="/dashboard/results">Results</Link>
-        </nav>
+        <ul>
+          <li><a href="/dashboard">My Courses</a></li>
+          <li><a href="/dashboard/results">Results</a></li>
+        </ul>
       </aside>
-
-      {/* Right Section */}
-      <div className="main-content">
-        <Header /> {/* Profile Dropdown at top-right */}
-        <div className="dashboard-body">
-          <Outlet /> {/* Shows MyCourses, Results, etc. */}
+      
+      <main className="main-content">
+        <Header />
+        <div className="content-area">
+          <Outlet />
         </div>
-      </div>
+      </main>
     </div>
   );
 }

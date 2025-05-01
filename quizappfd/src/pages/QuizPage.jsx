@@ -1,77 +1,159 @@
 // src/pages/QuizPage.jsx
-import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
-
-const dummyQuestions = {
-  1: [
-    { id: 1, question: "What is the output of 2 + 2?", options: ["2", "4", "6", "8"], answer: "4" },
-    { id: 2, question: "Which is a valid C keyword?", options: ["int", "num", "loop", "voided"], answer: "int" }
-  ],
-  2: [
-    { id: 1, question: "Which data structure uses FIFO?", options: ["Stack", "Queue", "Tree", "Graph"], answer: "Queue" },
-    { id: 2, question: "What is the time complexity of binary search?", options: ["O(n)", "O(n log n)", "O(log n)", "O(1)"], answer: "O(log n)" }
-  ],
-  3: [
-    { id: 1, question: "Which layer does IP work in?", options: ["Application", "Transport", "Network", "Physical"], answer: "Network" },
-    { id: 2, question: "Port number of HTTP?", options: ["20", "25", "80", "443"], answer: "80" }
-  ]
-};
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { useParams, useNavigate } from "react-router-dom";
+import "./QuizPage.css";
 
 function QuizPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
+
+  const [quiz, setQuiz] = useState(null);
+  const [currentSection, setCurrentSection] = useState(0);
+  const [currentQIndex, setCurrentQIndex] = useState(0);
   const [answers, setAnswers] = useState({});
-  const [submitted, setSubmitted] = useState(false);
+  const [reviewFlags, setReviewFlags] = useState({});
+  const [timeLeft, setTimeLeft] = useState(1800); // 30 min timer
 
-  const questions = dummyQuestions[id] || [];
+  useEffect(() => {
+    axios.get(`http://localhost:5000/api/quizzes/${id}`)
+      .then(res => setQuiz(res.data))
+      .catch(err => console.error("Failed to load quiz", err));
+  }, [id]);
 
-  const handleOptionChange = (questionId, selectedOption) => {
-    setAnswers({ ...answers, [questionId]: selectedOption });
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          submitTest();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const formatTime = (seconds) => {
+    const min = String(Math.floor(seconds / 60)).padStart(2, "0");
+    const sec = String(seconds % 60).padStart(2, "0");
+    return `${min}:${sec}`;
   };
 
-  const handleSubmit = () => {
-    setSubmitted(true);
+  const handleAnswer = (value) => {
+    const qId = quiz.sections[currentSection].questions[currentQIndex].id;
+    setAnswers({ ...answers, [qId]: value });
   };
 
-  const calculateScore = () => {
-    let score = 0;
-    questions.forEach(q => {
-      if (answers[q.id] === q.answer) {
-        score++;
-      }
+  const markForReview = () => {
+    const qId = quiz.sections[currentSection].questions[currentQIndex].id;
+    setReviewFlags({ ...reviewFlags, [qId]: true });
+  };
+
+  const submitTest = () => {
+    const email = localStorage.getItem("email");
+    axios.post("http://localhost:5000/api/quizzes/submit", {
+      answers,
+      quizId: id,
+      email,
+    }).then(res => {
+      localStorage.setItem("lastResult", JSON.stringify(res.data));
+      navigate("/results");
     });
-    return score;
   };
+
+  if (!quiz) return <div className="quiz-fullscreen">Loading...</div>;
+
+  const section = quiz.sections[currentSection];
+  const questions = section.questions;
+  const currentQ = questions[currentQIndex];
+  const profilePic = localStorage.getItem("profilePic");
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h2>📝 Attempt Quiz #{id}</h2>
-      {questions.map((q) => (
-        <div key={q.id}>
-          <p><strong>{q.question}</strong></p>
-          {q.options.map((opt) => (
-            <label key={opt}>
-              <input
-                type="radio"
-                name={`q${q.id}`}
-                value={opt}
-                disabled={submitted}
-                checked={answers[q.id] === opt}
-                onChange={() => handleOptionChange(q.id, opt)}
-              />
-              {opt}
-            </label>
-          ))}
-          <br /><br />
+    <div className="quiz-fullscreen">
+      <div className="quiz-header">
+        <h3>{quiz.title} | Section: {section.type}</h3>
+        <div className="quiz-header-right">
+          <span className="timer">⏱ {formatTime(timeLeft)}</span>
+          {profilePic && (
+            <img src={`http://localhost:5000/uploads/${profilePic}`} className="profile-img" alt="Profile" />
+          )}
         </div>
-      ))}
+      </div>
 
-      {!submitted ? (
-        <button onClick={handleSubmit}>Submit Quiz</button>
-      ) : (
-        <h3>✅ Your Score: {calculateScore()} / {questions.length}</h3>
-      )}
+      <div className="quiz-body">
+        <div className="quiz-left">
+          <div className="section-buttons">
+            {quiz.sections.map((sec, idx) => (
+              <button
+                key={idx}
+                className={currentSection === idx ? "active" : ""}
+                onClick={() => { setCurrentSection(idx); setCurrentQIndex(0); }}
+              >
+                {sec.type}
+              </button>
+            ))}
+          </div>
+
+          <h4>Q{currentQIndex + 1}: {currentQ.question}</h4>
+          {section.type === "MCQ" ? (
+            currentQ.options.map((opt) => (
+              <label key={opt} className="option">
+                <input
+                  type="radio"
+                  value={opt}
+                  name={`q-${currentQ.id}`}
+                  checked={answers[currentQ.id] === opt}
+                  onChange={() => handleAnswer(opt)}
+                /> {opt}
+              </label>
+            ))
+          ) : (
+            <input
+              type="text"
+              value={answers[currentQ.id] || ""}
+              onChange={(e) => handleAnswer(e.target.value)}
+              placeholder="Enter your answer"
+              className="nat-input"
+            />
+          )}
+
+          <div className="quiz-controls">
+            <button onClick={() => setCurrentQIndex(i => Math.max(i - 1, 0))}>Previous</button>
+            <button onClick={() => setCurrentQIndex(i => Math.min(i + 1, questions.length - 1))}>Next</button>
+            <button onClick={markForReview}>Mark for Review</button>
+            <button className="submit-btn" onClick={submitTest}>Submit</button>
+          </div>
+        </div>
+
+        <div className="quiz-right">
+          <h4>🧭 Ledger</h4>
+          {questions.map((q, idx) => {
+            const isAns = answers[q.id];
+            const isReview = reviewFlags[q.id];
+            let className = "ledger-btn";
+
+            if (isReview && isAns) className += " review-answered";
+            else if (isReview) className += " review";
+            else if (isAns) className += " answered";
+            else className += " unanswered";
+
+            return (
+              <button
+                key={q.id}
+                className={className}
+                onClick={() => setCurrentQIndex(idx)}
+              >
+                {idx + 1}
+              </button>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
+
 
 export default QuizPage;
