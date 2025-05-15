@@ -3,7 +3,7 @@ import Register from "./pages/Register";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import MyCourses from "./pages/MyCourses";
-import Results from "./pages/Results";
+import ResultsPage from "./pages/ResultsPage";
 import QuizPage from "./pages/QuizPage";
 
 function App() {
@@ -17,7 +17,7 @@ function App() {
         {/* Protected Routes */}
         <Route path="/dashboard" element={<Dashboard />}>
           <Route path="" element={<MyCourses />} />         {/* /dashboard */}
-          <Route path="results" element={<Results />} />    {/* /dashboard/results */}
+          <Route path="results" element={<ResultsPage />} />    {/* /dashboard/results */}
         </Route>
 
         {/* Quiz Attempt Page */}
