@@ -13,36 +13,76 @@ app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static('uploads')); // to serve profile images
 
-// ✅ In-memory Questions (shared across quizzes)
+// In-memory Questions (shared across quizzes)
 const allQuestions = [
-  { id: 1, type: 'MCQ', question: 'What is the capital of France?', options: ['Berlin', 'Madrid', 'Paris', 'Rome'], correct: 'Paris' },
-  { id: 2, type: 'NAT', question: 'What is the square root of 144?', correct: '12' },
-  { id: 3, type: 'MCQ', question: 'Who developed the theory of relativity?', options: ['Isaac Newton', 'Albert Einstein', 'Galileo Galilei', 'Niels Bohr'], correct: 'Albert Einstein' },
-  { id: 4, type: 'NAT', question: 'What is the value of Pi up to two decimal places?', correct: '3.14' },
-  { id: 5, type: 'MCQ', question: 'Which language is used for web apps?', options: ['Python', 'JavaScript', 'C++', 'Java'], correct: 'JavaScript' },
-  { id: 6, type: 'NAT', question: 'How many bytes are there in a kilobyte (KB)?', correct: '1024' },
+  // --------------- GATE-style MCQs ------------------
+  { id: 1, type: 'MCQ', question: 'The Laplace transform of f(t) = e^(–2t) is:', options: ['1/(s+2)', 's+2', '1/(s–2)', 's–2'], correct: '1/(s+2)' },
+  { id: 2, type: 'MCQ', question: 'Which law explains the phenomenon of electromagnetic induction?', options: ['Ohm’s Law', 'Faraday’s Law', 'Lenz’s Law', 'Ampere’s Law'], correct: 'Faraday’s Law' },
+  { id: 3, type: 'MCQ', question: 'Which of the following is an eigenvalue of the matrix [[2, 1], [1, 2]]?', options: ['1', '2', '3', '4'], correct: '3' },
+  { id: 4, type: 'MCQ', question: 'Which of the following is a scalar quantity?', options: ['Velocity', 'Acceleration', 'Force', 'Work'], correct: 'Work' },
+  { id: 5, type: 'MCQ', question: 'Which gas is liberated when metal reacts with acid?', options: ['Oxygen', 'Hydrogen', 'Nitrogen', 'Chlorine'], correct: 'Hydrogen' },
+  { id: 6, type: 'MCQ', question: 'If A is an n x n matrix with determinant zero, then A is:', options: ['Invertible', 'Orthogonal', 'Singular', 'Diagonal'], correct: 'Singular' },
+  { id: 7, type: 'MCQ', question: 'Which rule is used in thermodynamics for entropy calculation?', options: ['Clapeyron Equation', 'Clausius Equation', 'Gibbs Free Energy', 'Carnot’s Theorem'], correct: 'Clausius Equation' },
+  { id: 8, type: 'MCQ', question: 'The reaction rate is independent of reactant concentration. It is a:', options: ['First order', 'Second order', 'Zero order', 'Third order'], correct: 'Zero order' },
+  { id: 9, type: 'MCQ', question: 'In Gauss elimination, which matrix form is obtained?', options: ['Identity Matrix', 'Echelon Form', 'Symmetric Matrix', 'Diagonal Matrix'], correct: 'Echelon Form' },
+  { id: 10, type: 'MCQ', question: 'What is the maximum power transfer condition?', options: ['Load = 0', 'Load = Source Resistance', 'Load → ∞', 'No Load'], correct: 'Load = Source Resistance' },
+  { id: 11, type: 'MCQ', question: 'Which one is a pseudo force?', options: ['Gravitational force', 'Centrifugal force', 'Normal force', 'Tension'], correct: 'Centrifugal force' },
+  { id: 12, type: 'MCQ', question: 'A p-type semiconductor is formed by adding:', options: ['Pentavalent impurity', 'Trivalent impurity', 'Tetravalent impurity', 'Hexavalent impurity'], correct: 'Trivalent impurity' },
+  { id: 13, type: 'MCQ', question: 'Orthogonal vectors have:', options: ['Dot product = 1', 'Dot product = 0', 'Cross product = 0', 'Equal magnitude'], correct: 'Dot product = 0' },
+  { id: 14, type: 'MCQ', question: 'Which instrument is used to measure very small currents?', options: ['Voltmeter', 'Ammeter', 'Galvanometer', 'Ohmmeter'], correct: 'Galvanometer' },
+  { id: 15, type: 'MCQ', question: 'Which principle is used in Nuclear Reactors?', options: ['Fusion', 'Fission', 'Decay', 'Electrolysis'], correct: 'Fission' },
+  { id: 16, type: 'MCQ', question: 'Which compound has SP³ hybridization?', options: ['CO₂', 'C₂H₂', 'CH₄', 'BF₃'], correct: 'CH₄' },
+  { id: 17, type: 'MCQ', question: 'Which theorem converts a network to a single voltage source?', options: ['Norton', 'Thevenin', 'Millman', 'Superposition'], correct: 'Thevenin' },
+  { id: 18, type: 'MCQ', question: 'Probability of drawing an ace from a deck is:', options: ['1/13', '1/4', '1/52', '4/52'], correct: '1/13' },
+  { id: 19, type: 'MCQ', question: 'If sinθ = 3/5, then cosθ = ?', options: ['4/5', '5/4', '3/4', '√3/2'], correct: '4/5' },
+  { id: 20, type: 'MCQ', question: 'Find the inverse of matrix [[1,2],[3,4]] determinant.', options: ['–2', '–1', '1', '2'], correct: '–2' },
+
+  // --------------- GATE-style NATs ------------------
+  { id: 21, type: 'NAT', question: 'What is the square of 7?', correct: '49' },
+  { id: 22, type: 'NAT', question: 'Find x: 3x + 2 = 17', correct: '5' },
+  { id: 23, type: 'NAT', question: 'Evaluate lim(x→0) sin(x)/x', correct: '1' },
+  { id: 24, type: 'NAT', question: 'If velocity = 20 m/s and time = 5s, find distance.', correct: '100' },
+  { id: 25, type: 'NAT', question: 'Atomic number of Aluminium?', correct: '13' },
+  { id: 26, type: 'NAT', question: 'Mass of 1 mole of H₂?', correct: '2' },
+  { id: 27, type: 'NAT', question: 'Find derivative of x² + 2x + 1 at x = 1', correct: '4' },
+  { id: 28, type: 'NAT', question: 'Boiling point of water in Kelvin?', correct: '373' },
+  { id: 29, type: 'NAT', question: 'What is log₁₀(1000)?', correct: '3' },
+  { id: 30, type: 'NAT', question: 'How many valence electrons in Oxygen?', correct: '6' },
+  { id: 31, type: 'NAT', question: 'If A = 5 and B = 7, compute A² + B².', correct: '74' },
+  { id: 32, type: 'NAT', question: 'Calculate the molarity: 2 mols in 1 L.', correct: '2' },
+  { id: 33, type: 'NAT', question: 'Voltage = Current × Resistance. If I=2A, R=5Ω', correct: '10' },
+  { id: 34, type: 'NAT', question: 'What is √16?', correct: '4' },
+  { id: 35, type: 'NAT', question: 'Evaluate ∫₀² x dx', correct: '2' },
+  { id: 36, type: 'NAT', question: 'Speed = 90km/hr. Time = 2 hr. Find Distance (in km)', correct: '180' },
+  { id: 37, type: 'NAT', question: 'Evaluate log₁₀(1)', correct: '0' },
+  { id: 38, type: 'NAT', question: 'Find the volume of cube with side 5 cm.', correct: '125' },
+  { id: 39, type: 'NAT', question: 'Find pH of 0.01 M HCl (strong acid)', correct: '2' },
+  { id: 40, type: 'NAT', question: 'Value of e⁰', correct: '1' },
 ];
 
-// ✅ Sample Quizzes using question IDs
+
+
+//  Sample Quizzes using question IDs
 const quizzes = {
   1: {
     id: 1,
-    title: "C Programming Test",
-    description: "20 MCQs + NAT",
+    title: "GATE Practice Test",
+    description: "20 MCQs and 20 NATs on PCM subjects",
     sections: [
       {
         type: "MCQ",
-        questions: [allQuestions[0], allQuestions[2], allQuestions[4]]
+        questions: allQuestions.filter(q => q.type === "MCQ")
       },
       {
         type: "NAT",
-        questions: [allQuestions[1], allQuestions[3], allQuestions[5]]
+        questions: allQuestions.filter(q => q.type === "NAT")
       }
     ]
   }
 };
 
-// ✅ Get All Quizzes
+
+//  Get All Quizzes
 app.get("/api/quizzes", (req, res) => {
   const quizList = Object.values(quizzes).map(q => ({
     id: q.id,
@@ -52,8 +92,8 @@ app.get("/api/quizzes", (req, res) => {
   res.json(quizList);
 });
 
-// ✅ Get Quiz by ID
-// ✅ Updated (frontend expects `sections`)
+//  Get Quiz by ID
+
 app.get("/api/quizzes/:id", (req, res) => {
   const quiz = quizzes[req.params.id];
   if (!quiz) return res.status(404).send("Quiz not found");
@@ -62,7 +102,7 @@ app.get("/api/quizzes/:id", (req, res) => {
 });
 
 
-// ✅ Submit Quiz Answers
+// Submit Quiz Answers
 app.post("/api/quizzes/submit", (req, res) => {
   console.log("🔔 Received Submission:");
   console.log("Quiz ID:", req.body.quizId);
@@ -104,7 +144,7 @@ app.post("/api/quizzes/submit", (req, res) => {
     questions: allQuestions
   };
 
-  // ✅ Send confirmation email
+  //  Send confirmation email
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -135,7 +175,7 @@ app.post("/api/quizzes/submit", (req, res) => {
 });
 
 
-// ✅ MySQL connection
+//  MySQL connection
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -145,10 +185,10 @@ const db = mysql.createConnection({
 
 db.connect(err => {
   if (err) throw err;
-  console.log("✅ MySQL Connected");
+  console.log(" MySQL Connected");
 });
 
-// ✅ File Upload (Multer)
+// File Upload (Multer)
 const storage = multer.diskStorage({
   destination: 'uploads/',
   filename: (req, file, cb) => {
@@ -158,7 +198,7 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// ✅ Register User
+//  Register User
 app.post('/api/auth/register', upload.fields([
   { name: 'profilePic', maxCount: 1 },
   { name: 'idCard', maxCount: 1 }
@@ -203,7 +243,7 @@ app.post('/api/auth/register', upload.fields([
   });
 });
 
-// ✅ Login User
+//  Login User
 app.post("/api/auth/login", (req, res) => {
   const { email, password } = req.body;
 
@@ -226,7 +266,7 @@ app.post("/api/auth/login", (req, res) => {
         success: true, 
         message: "Login successful", 
         profilePic: user.profilePic,
-        email: user.email               // ✅ Add this
+        email: user.email               
       });
       
     });

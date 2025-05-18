@@ -34,7 +34,7 @@ function Register() {
     try {
       const response = await axios.post('http://localhost:5000/api/auth/register', formData);
 
-      // ✅ Server response contains stored profile picture name
+      //  Server response contains stored profile picture name
       if (response.data.profilePic) {
         localStorage.setItem("profilePic", response.data.profilePic);
       }

@@ -1,29 +1,51 @@
-.results {
-    padding: 30px;
-    max-width: 800px;
-    margin: auto;
-    font-family: Arial, sans-serif;
-  }
-  
-  .question-card {
-    background: #f9f9f9;
-    border: 1px solid #ccc;
-    padding: 16px;
-    margin-bottom: 20px;
-  }
-  
-  .question-card ul {
-    list-style: none;
-    padding-left: 0;
-  }
-  
-  .correct {
-    color: green;
-    font-weight: bold;
-  }
-  
-  .selected {
-    color: red;
-    font-style: italic;
-  }
-  
+.results-page {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  background: #f7f7f7;
+}
+
+.summary {
+  background: #e9ecef;
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 25px;
+  display: flex;
+  gap: 40px;
+  font-size: 16px;
+}
+
+.questions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.question-card {
+  padding: 15px;
+  border-radius: 5px;
+  background: white;
+  border: 1px solid #ccc;
+}
+
+.correct {
+  background-color: #d4edda;
+  color: #155724;
+  padding: 5px;
+  border-radius: 4px;
+}
+
+.wrong {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 5px;
+  border-radius: 4px;
+}
+
+ul {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.nat-answers p {
+  margin: 4px 0;
+}

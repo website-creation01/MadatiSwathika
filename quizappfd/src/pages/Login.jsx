@@ -18,7 +18,9 @@ function Login() {
 
       if (res.data.success) {
         localStorage.setItem("isLoggedIn", "true");
-        localStorage.setItem("userEmail", email); // ✅ Store email for result saving and profile
+        localStorage.setItem("email", email);         // optional fallback
+        localStorage.setItem("userEmail", email);     // preferred
+
         alert("Login successful!");
         navigate("/dashboard");
       } else {

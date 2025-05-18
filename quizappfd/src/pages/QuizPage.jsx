@@ -16,7 +16,7 @@ const QuizPage = () => {
       setQuiz(res.data);
     });
 
-    // ✅ Get profile pic from localStorage (path)
+    //  Get profile pic from localStorage (path)
     const storedPic = localStorage.getItem("profilePic");
     if (storedPic) {
       setProfilePic(`http://localhost:5000/uploads/${storedPic}`);
@@ -56,20 +56,26 @@ const QuizPage = () => {
 
   const appendToNAT = (char) => {
     const prev = answers[qid] || "";
-    if (char === "C") setAnswers({ ...answers, [qid]: "" });
-    else if (char === "←") setAnswers({ ...answers, [qid]: prev.slice(0, -1) });
-    else setAnswers({ ...answers, [qid]: prev + char });
+    if (char === "C") {
+      setAnswers({ ...answers, [qid]: "" });
+    } else if (char === "←") {
+      setAnswers({ ...answers, [qid]: prev.slice(0, -1) });
+    } else if (char === "." && prev.includes(".")) {
+      // Prevent multiple dots
+      return;
+    } else {
+      setAnswers({ ...answers, [qid]: prev + char });
+    }
   };
-
+  
   const toggleReview = () => {
     setReviewFlags(prev => ({ ...prev, [qid]: !prev[qid] }));
   };
 
   const handleSubmit = () => {
-    const email = localStorage.getItem("email");
-  
+    const email = localStorage.getItem("userEmail"); // ✅ Correct key now
     if (!email) {
-      alert("⚠️ Email not found in localStorage. Please login again.");
+      alert("Email not found. Please login again.");
       return;
     }
   
@@ -78,12 +84,11 @@ const QuizPage = () => {
       answers,
       email
     }).then(res => {
-      console.log("✅ Submitted:", res.data);
       localStorage.setItem("lastResult", JSON.stringify(res.data));
       window.location.href = "/results";
     }).catch(err => {
-      console.error("❌ Submission failed:", err.response?.data || err.message);
-      alert("❌ Submission failed: " + (err.response?.data?.error || err.message));
+      console.error("Submission failed", err);
+      alert("Submission failed");
     });
   };
   
@@ -166,6 +171,7 @@ const QuizPage = () => {
                 {[...'1234567890'].map((n) => (
                   <button key={n} onClick={() => appendToNAT(n)}>{n}</button>
                 ))}
+                <button onClick={() => appendToNAT(".")}>.</button>
                 <button onClick={() => appendToNAT("←")}>←</button>
                 <button onClick={() => appendToNAT("C")}>Clear</button>
               </div>

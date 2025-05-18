@@ -148,13 +148,6 @@
   gap: 15px;
 }
 
-.ledger-panel {
-  width: 260px;
-  background: #f0f0f0;
-  padding: 20px;
-  border-left: 1px solid #ccc;
-}
-
 .status-box {
   margin-bottom: 20px;
 }
@@ -256,4 +249,19 @@
   border-radius: 6px;
   cursor: pointer;
 }
+.ledger-panel {
+  width: 240px;
+  background-color: #f4f4f4;
+  padding: 16px;
+  border-left: 1px solid #ccc;
+  overflow-y: auto;          /* ✅ Enable scrolling */
+  max-height: calc(100vh - 120px); /* Adjust for header/footer */
+}
+
+.ledger {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 
