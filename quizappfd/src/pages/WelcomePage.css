@@ -1,0 +1,26 @@
+.welcome-page {
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(to bottom right, #f0f4ff, #dbe8ff);
+}
+
+.welcome-box {
+  background: white;
+  padding: 40px 50px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.welcome-box h1 {
+  font-size: 2rem;
+  margin-bottom: 15px;
+  color: #2a5298;
+}
+
+.welcome-box p {
+  font-size: 1.2rem;
+  color: #333;
+}

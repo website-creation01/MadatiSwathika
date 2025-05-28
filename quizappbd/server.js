@@ -36,7 +36,8 @@ const allQuestions = [
   { id: 18, type: 'MCQ', question: 'Probability of drawing an ace from a deck is:', options: ['1/13', '1/4', '1/52', '4/52'], correct: '1/13' },
   { id: 19, type: 'MCQ', question: 'If sinθ = 3/5, then cosθ = ?', options: ['4/5', '5/4', '3/4', '√3/2'], correct: '4/5' },
   { id: 20, type: 'MCQ', question: 'Find the inverse of matrix [[1,2],[3,4]] determinant.', options: ['–2', '–1', '1', '2'], correct: '–2' },
-
+  
+  
   // --------------- GATE-style NATs ------------------
   { id: 21, type: 'NAT', question: 'What is the square of 7?', correct: '49' },
   { id: 22, type: 'NAT', question: 'Find x: 3x + 2 = 17', correct: '5' },
@@ -58,7 +59,12 @@ const allQuestions = [
   { id: 38, type: 'NAT', question: 'Find the volume of cube with side 5 cm.', correct: '125' },
   { id: 39, type: 'NAT', question: 'Find pH of 0.01 M HCl (strong acid)', correct: '2' },
   { id: 40, type: 'NAT', question: 'Value of e⁰', correct: '1' },
+
+
+
 ];
+
+
 
 
 
@@ -66,21 +72,20 @@ const allQuestions = [
 const quizzes = {
   1: {
     id: 1,
-    title: "GATE Practice Test",
-    description: "20 MCQs and 20 NATs on PCM subjects",
+    title: "GATE Practice Test 1",
+    description: "20 MCQ + 20 NAT",
     sections: [
       {
         type: "MCQ",
-        questions: allQuestions.filter(q => q.type === "MCQ")
+        questions: allQuestions.slice(0, 20)
       },
       {
         type: "NAT",
-        questions: allQuestions.filter(q => q.type === "NAT")
+        questions: allQuestions.slice(20, 40)
       }
     ]
-  }
-};
-
+  },
+}
 
 //  Get All Quizzes
 app.get("/api/quizzes", (req, res) => {
@@ -97,9 +102,42 @@ app.get("/api/quizzes", (req, res) => {
 app.get("/api/quizzes/:id", (req, res) => {
   const quiz = quizzes[req.params.id];
   if (!quiz) return res.status(404).send("Quiz not found");
+  console.log("🔍 Quiz Fetched:", quiz.title);
+
 
   res.json(quiz); // Send full quiz with `sections`
 });
+
+app.get("/api/user/profile/:email", (req, res) => {
+  const { email } = req.params;
+  const sql = "SELECT fullName, email, phone, collegeName, collegeID, profilePic FROM users WHERE email = ?";
+  db.query(sql, [email], (err, results) => {
+    if (err) return res.status(500).json({ error: "Database error" });
+    if (results.length === 0) return res.status(404).json({ error: "User not found" });
+    res.json(results[0]);
+  });
+});
+
+app.post("/api/user/change-password", async (req, res) => {
+  const { email, currentPassword, newPassword } = req.body;
+
+  const sql = "SELECT password FROM users WHERE email = ?";
+  db.query(sql, [email], async (err, results) => {
+    if (err) return res.status(500).json({ error: "Database error" });
+    if (results.length === 0) return res.status(404).json({ error: "User not found" });
+
+    const isMatch = await bcrypt.compare(currentPassword, results[0].password);
+    if (!isMatch) return res.status(401).json({ error: "Incorrect current password" });
+
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    const updateSql = "UPDATE users SET password = ? WHERE email = ?";
+    db.query(updateSql, [hashedNewPassword, email], (updateErr) => {
+      if (updateErr) return res.status(500).json({ error: "Password update failed" });
+      res.json({ message: "Password updated successfully" });
+    });
+  });
+});
+
 
 
 // Submit Quiz Answers
@@ -266,7 +304,11 @@ app.post("/api/auth/login", (req, res) => {
         success: true, 
         message: "Login successful", 
         profilePic: user.profilePic,
-        email: user.email               
+        email: user.email,
+        fullName: user.fullName,
+        collegeName: user.collegeName,     
+        collegeID: user.collegeID,         
+        phone: user.phone                
       });
       
     });

@@ -1,34 +1,34 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import './QuizPage.css';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { useParams, useNavigate } from "react-router-dom";
+import "./QuizPage.css";
 
 const QuizPage = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
   const [quiz, setQuiz] = useState(null);
   const [currentSection, setCurrentSection] = useState(0);
   const [currentQIndex, setCurrentQIndex] = useState(0);
-  const [answers, setAnswers] = useState({});
+  const [savedAnswers, setSavedAnswers] = useState({});
+  const [tempAnswers, setTempAnswers] = useState({});
   const [reviewFlags, setReviewFlags] = useState({});
-  const [timeLeft, setTimeLeft] = useState(1800); // 30 min
-  const [profilePic, setProfilePic] = useState('');
+  const [timeLeft, setTimeLeft] = useState(1800);
+  const [showInstructions, setShowInstructions] = useState(true);
+  const [showGeneral, setShowGeneral] = useState(false);
+  const [confirmSubmit, setConfirmSubmit] = useState(false);
 
   useEffect(() => {
-    axios.get("http://localhost:5000/api/quizzes/1").then(res => {
+    axios.get(`http://localhost:5000/api/quizzes/${id}`).then((res) => {
       setQuiz(res.data);
     });
-
-    //  Get profile pic from localStorage (path)
-    const storedPic = localStorage.getItem("profilePic");
-    if (storedPic) {
-      setProfilePic(`http://localhost:5000/uploads/${storedPic}`);
-    }
-  }, []);
+  }, [id]);
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setTimeLeft(prev => {
+      setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
-          alert("Time is up!");
+          handleSubmit();
           return 0;
         }
         return prev - 1;
@@ -38,8 +38,8 @@ const QuizPage = () => {
   }, []);
 
   const formatTime = (t) => {
-    const m = String(Math.floor(t / 60)).padStart(2, '0');
-    const s = String(t % 60).padStart(2, '0');
+    const m = String(Math.floor(t / 60)).padStart(2, "0");
+    const s = String(t % 60).padStart(2, "0");
     return `${m}:${s}`;
   };
 
@@ -50,55 +50,46 @@ const QuizPage = () => {
   const currentQ = questions[currentQIndex];
   const qid = currentQ.id;
 
-  const handleAnswer = (val) => {
-    setAnswers({ ...answers, [qid]: val });
+  const handleOptionSelect = (val) => {
+    setTempAnswers({ ...tempAnswers, [qid]: val });
   };
 
   const appendToNAT = (char) => {
-    const prev = answers[qid] || "";
-    if (char === "C") {
-      setAnswers({ ...answers, [qid]: "" });
-    } else if (char === "←") {
-      setAnswers({ ...answers, [qid]: prev.slice(0, -1) });
-    } else if (char === "." && prev.includes(".")) {
-      // Prevent multiple dots
-      return;
-    } else {
-      setAnswers({ ...answers, [qid]: prev + char });
-    }
+    const prev = tempAnswers[qid] || "";
+    if (char === "C") setTempAnswers({ ...tempAnswers, [qid]: "" });
+    else if (char === "←") setTempAnswers({ ...tempAnswers, [qid]: prev.slice(0, -1) });
+    else setTempAnswers({ ...tempAnswers, [qid]: prev + char });
   };
-  
+
+  const handleSaveAndNext = () => {
+    const updated = { ...savedAnswers, [qid]: tempAnswers[qid] };
+    setSavedAnswers(updated);
+    setCurrentQIndex((i) => Math.min(i + 1, questions.length - 1));
+  };
+
   const toggleReview = () => {
-    setReviewFlags(prev => ({ ...prev, [qid]: !prev[qid] }));
+    setReviewFlags((prev) => ({ ...prev, [qid]: !prev[qid] }));
   };
 
   const handleSubmit = () => {
-    const email = localStorage.getItem("userEmail"); // ✅ Correct key now
-    if (!email) {
-      alert("Email not found. Please login again.");
-      return;
-    }
-  
-    axios.post("http://localhost:5000/api/quizzes/submit", {
-      quizId: quiz.id,
-      answers,
-      email
-    }).then(res => {
-      localStorage.setItem("lastResult", JSON.stringify(res.data));
-      window.location.href = "/results";
-    }).catch(err => {
-      console.error("Submission failed", err);
-      alert("Submission failed");
-    });
+    const email = localStorage.getItem("userEmail");
+    axios
+      .post("http://localhost:5000/api/quizzes/submit", {
+        quizId: quiz.id,
+        answers: savedAnswers,
+        email,
+      })
+      .then((res) => {
+        localStorage.setItem("lastResult", JSON.stringify(res.data));
+        navigate("/dashboard/results");
+      });
   };
-  
-  
 
   const getStatusCounts = () => {
     let a = 0, u = 0, m = 0, am = 0;
-    quiz.sections.forEach(sec =>
-      sec.questions.forEach(q => {
-        const ans = answers[q.id];
+    quiz.sections.forEach((sec) =>
+      sec.questions.forEach((q) => {
+        const ans = savedAnswers[q.id];
         const rev = reviewFlags[q.id];
         if (rev && ans) am++;
         else if (rev) m++;
@@ -113,65 +104,87 @@ const QuizPage = () => {
 
   return (
     <div className="quiz-container">
+      {showInstructions && (
+        <div className="instructions-popup">
+          <div className="instruction-box">
+            <h2>📋 Instructions</h2>
+            <ul>
+              <li>This is a GATE-style test interface.</li>
+              <li>Answer MCQ and NAT questions carefully.</li>
+              <li>Use "Save & Next" to save answers.</li>
+              <li>Click Submit when done.</li>
+            </ul>
+            <button onClick={() => {
+              setShowInstructions(false);
+              setShowGeneral(true);
+            }}>
+              Next
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showGeneral && (
+        <div className="instructions-popup">
+          <div className="instruction-box">
+            <h2>🧾 General Instructions</h2>
+            <ul>
+              <li>Test duration: 30 minutes</li>
+              <li>Section-wise navigation is allowed.</li>
+              <li>Click Submit only after completing all questions.</li>
+            </ul>
+            <button onClick={() => setShowGeneral(false)}>Start Test</button>
+          </div>
+        </div>
+      )}
+
+      {confirmSubmit && (
+        <div className="confirm-overlay">
+          <div className="confirm-box">
+            <p>Are you sure you want to submit the test?</p>
+            <button onClick={handleSubmit}>Yes, Submit</button>
+            <button onClick={() => setConfirmSubmit(false)}>Cancel</button>
+          </div>
+        </div>
+      )}
+
       <div className="quiz-header">
         <h2>{quiz.title} | Section: {section.type}</h2>
-        <div className="header-right">
-          <span className="timer">⏱ {formatTime(timeLeft)}</span>
-          {profilePic && (
-            <img
-              src={profilePic}
-              className="profile-img"
-              alt="Profile"
-            />
-          )}
-        </div>
+        <span className="timer">⏱ {formatTime(timeLeft)}</span>
       </div>
 
       <div className="quiz-body">
         <div className="question-panel">
           <div className="section-tabs">
             {quiz.sections.map((sec, idx) => (
-              <button
-                key={idx}
-                className={idx === currentSection ? 'active' : ''}
-                onClick={() => {
-                  setCurrentSection(idx);
-                  setCurrentQIndex(0);
-                }}
-              >
-                {sec.type}
-              </button>
+              <button key={idx} className={idx === currentSection ? "active" : ""} onClick={() => {
+                setCurrentSection(idx);
+                setCurrentQIndex(0);
+              }}>{sec.type}</button>
             ))}
           </div>
 
           <h4>Q{currentQIndex + 1}: {currentQ.question}</h4>
 
-          {currentQ.type === 'MCQ' ? (
+          {currentQ.type === "MCQ" ? (
             currentQ.options.map((opt, i) => (
               <label key={i} className="option">
                 <input
                   type="radio"
                   name={`q-${qid}`}
-                  checked={answers[qid] === opt}
-                  onChange={() => handleAnswer(opt)}
+                  checked={tempAnswers[qid] === opt}
+                  onChange={() => handleOptionSelect(opt)}
                 />
                 {opt}
               </label>
             ))
           ) : (
             <>
-              <input
-                className="nat-input"
-                type="text"
-                placeholder="Enter your answer"
-                value={answers[qid] || ''}
-                readOnly
-              />
+              <input className="nat-input" type="text" readOnly value={tempAnswers[qid] || ""} />
               <div className="numpad">
-                {[...'1234567890'].map((n) => (
+                {[..."1234567890."].map((n) => (
                   <button key={n} onClick={() => appendToNAT(n)}>{n}</button>
                 ))}
-                <button onClick={() => appendToNAT(".")}>.</button>
                 <button onClick={() => appendToNAT("←")}>←</button>
                 <button onClick={() => appendToNAT("C")}>Clear</button>
               </div>
@@ -188,10 +201,10 @@ const QuizPage = () => {
           </div>
 
           <h4>🧭 Ledger</h4>
-          <div className="ledger">
+          <div className="ledger scrollable">
             {quiz.sections.flatMap(s => s.questions).map((q, i) => {
               let cls = "ledger-btn";
-              const ans = answers[q.id];
+              const ans = savedAnswers[q.id];
               const rev = reviewFlags[q.id];
               if (rev && ans) cls += " marked-answered";
               else if (rev) cls += " marked";
@@ -218,10 +231,12 @@ const QuizPage = () => {
       </div>
 
       <div className="bottom-controls">
-        <button onClick={() => setCurrentQIndex(i => Math.max(i - 1, 0))}>Previous</button>
-        <button onClick={() => setCurrentQIndex(i => Math.min(i + 1, questions.length - 1))}>Next</button>
-        <button onClick={toggleReview}>Mark for Review</button>
-        <button className="submit-btn" onClick={handleSubmit}>Submit</button>
+        <div>
+          <button onClick={() => setCurrentQIndex(i => Math.max(i - 1, 0))}>Previous</button>
+          <button onClick={toggleReview}>Mark for Review</button>
+          <button onClick={handleSaveAndNext}>Save & Next</button>
+        </div>
+        <button className="submit-btn" onClick={() => setConfirmSubmit(true)}>Submit</button>
       </div>
     </div>
   );

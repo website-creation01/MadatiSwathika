@@ -1,90 +1,26 @@
-.quiz-fullscreen {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.quiz-header {
-  height: 60px;
-  background-color: navy;
-  color: white;
-  padding: 10px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.quiz-header-right {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.profile-img {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-}
-
-.quiz-body {
-  display: flex;
-  flex: 1;
-  overflow: hidden;
-}
-
-.quiz-left {
-  flex: 1;
-  padding: 20px;
-  overflow-y: auto;
-}
-
-.quiz-right {
-  width: 200px;
-  padding: 20px;
-  background: #f2f2f2;
-  border-left: 1px solid #ccc;
-  overflow-y: auto;
-}
-
-.ledger-btn {
-  width: 35px;
-  height: 35px;
-  margin: 5px;
-  border-radius: 50%;
-  border: none;
-  font-weight: bold;
-}
-
-.answered {
-  background-color: green;
-  color: white;
-}
-
-.unanswered {
-  background-color: red;
-  color: white;
-}
-* {
-  box-sizing: border-box;
+/* Full screen layout */
+body, html {
   margin: 0;
   padding: 0;
+  height: 100%;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f4f6fa;
 }
 
 .quiz-container {
-  height: 100vh;
-  width: 100vw;
   display: flex;
   flex-direction: column;
-  font-family: Arial, sans-serif;
+  height: 100vh;
 }
 
+/* Header */
 .quiz-header {
-  background: #002244;
-  color: white;
-  padding: 10px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background: #1e3c72;
+  color: white;
+  padding: 10px 20px;
 }
 
 .header-right {
@@ -98,170 +34,281 @@
   height: 40px;
   border-radius: 50%;
   object-fit: cover;
+  border: 2px solid white;
 }
 
+/* Body */
 .quiz-body {
   display: flex;
   flex: 1;
+  overflow: hidden;
 }
 
 .question-panel {
   flex: 3;
-  padding: 25px;
-  background: #f7f9fb;
+  padding: 20px;
+  overflow-y: auto;
+  background-color: white;
+  border-right: 1px solid #ccc;
+}
+
+.ledger-panel {
+  flex: 1;
+  background: #f0f0f0;
+  padding: 20px;
+  overflow-y: auto;
+  border-left: 1px solid #ccc;
+}
+
+.scrollable {
+  max-height: 300px;
   overflow-y: auto;
 }
 
+/* Section Tabs */
 .section-tabs {
-  margin-bottom: 20px;
+  display: flex;
+  margin-bottom: 15px;
 }
+
 .section-tabs button {
+  padding: 8px 12px;
   margin-right: 10px;
-  padding: 6px 12px;
+  background: #eee;
   border: none;
-  background: #ccc;
   cursor: pointer;
+  border-radius: 4px;
 }
+
 .section-tabs .active {
-  background: #007bff;
+  background: #2a5298;
   color: white;
 }
 
+/* MCQ Options */
 .option {
   display: block;
-  margin: 10px 0;
-  padding: 10px;
-  background: #eaeaea;
-  border-radius: 5px;
+  margin-bottom: 8px;
 }
 
-.nat-input {
-  padding: 8px;
-  width: 60%;
-  font-size: 16px;
-  margin-top: 10px;
-}
-
-.bottom-controls {
-  margin-top: 25px;
-  display: flex;
-  gap: 15px;
-}
-
-.status-box {
-  margin-bottom: 20px;
-}
-.status-box div {
-  margin: 8px 0;
-}
-
-.circle {
-  width: 14px;
-  height: 14px;
-  display: inline-block;
-  border-radius: 50%;
+.option input {
   margin-right: 10px;
 }
 
-.answered {
-  background: green;
-}
-.not-answered {
-  background: red;
-}
-.marked {
-  background: blue;
-}
-.marked-answered {
-  background: purple;
+/* NAT Input & Numpad */
+.nat-input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  font-size: 16px;
+  border-radius: 6px;
+  border: 1px solid #aaa;
+  background: #fff;
 }
 
-.ledger {
+.numpad {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
-.ledger-btn {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  border: 1px solid #333;
-  font-weight: bold;
-  cursor: pointer;
-}
-.ledger-btn.answered {
-  background: green;
-  color: white;
-}
-.ledger-btn.not-answered {
-  background: red;
-  color: white;
-}
-.ledger-btn.marked {
-  background: blue;
-  color: white;
-}
-.ledger-btn.marked-answered {
-  background: purple;
-  color: white;
-}
-.bottom-controls {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 12px 24px;
-  display: flex;
-  justify-content: flex-end;
-  background: #fff;
-  border-top: 1px solid #ccc;
-  gap: 14px;
-  z-index: 99;
-}
-
-.bottom-controls button {
-  padding: 8px 16px;
-  border-radius: 5px;
-  border: none;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.submit-btn {
-  background-color: green;
-  color: white;
-}
-
-.numpad {
-  margin-top: 10px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
 
 .numpad button {
-  padding: 10px;
+  padding: 12px;
+  flex: 1 0 28%;
   font-size: 16px;
-  width: 50px;
-  height: 40px;
-  background: #eaeaea;
-  border: 1px solid #ccc;
+  background: #1e3c72;
+  color: white;
+  border: none;
   border-radius: 6px;
   cursor: pointer;
 }
-.ledger-panel {
-  width: 240px;
-  background-color: #f4f4f4;
-  padding: 16px;
-  border-left: 1px solid #ccc;
-  overflow-y: auto;          /* ✅ Enable scrolling */
-  max-height: calc(100vh - 120px); /* Adjust for header/footer */
+
+.numpad button:hover {
+  background: #16325c;
 }
 
-.ledger {
+/* Ledger Buttons */
+.ledger-btn {
+  margin: 5px;
+  padding: 10px;
+  width: 40px;
+  height: 40px;
+  font-weight: bold;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+}
+
+.answered {
+  background: #4caf50;
+  color: white;
+}
+
+.not-answered {
+  background: #f44336;
+  color: white;
+}
+
+.marked {
+  background: orange;
+  color: white;
+}
+
+.marked-answered {
+  background: #9c27b0;
+  color: white;
+}
+
+/* Bottom Controls */
+.bottom-controls {
+  padding: 10px 20px;
   display: flex;
-  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: center;
+  background: #eee;
+  border-top: 1px solid #ccc;
   gap: 10px;
+  position: relative;
 }
 
+.bottom-controls button {
+  padding: 10px 15px;
+  background: #2a5298;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+}
 
+.bottom-controls .submit-btn {
+  background: #d32f2f;
+  position: absolute;
+  right: 20px;
+}
+
+.bottom-controls button:hover {
+  opacity: 0.9;
+}
+
+/* Status Box */
+.status-box {
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.status-box .circle {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 5px;
+  border-radius: 50%;
+  vertical-align: middle;
+}
+
+.status-box .answered { background: #4caf50; }
+.status-box .not-answered { background: #f44336; }
+.status-box .marked { background: orange; }
+.status-box .marked-answered { background: #9c27b0; }
+
+/* Loading */
+.loading {
+  text-align: center;
+  padding: 50px;
+  font-size: 24px;
+  color: #2a5298;
+}
+
+/* Instructions Popup */
+.instructions-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(10, 10, 10, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.instruction-box {
+  background: white;
+  padding: 30px;
+  width: 400px;
+  border-radius: 12px;
+  text-align: left;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+}
+
+.instruction-box h2 {
+  margin-top: 0;
+  color: #1e3c72;
+}
+
+.instruction-box ul {
+  padding-left: 20px;
+  line-height: 1.6;
+}
+
+.instruction-box button {
+  margin-top: 20px;
+  width: 100%;
+  background: #2a5298;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* Confirm Overlay */
+.confirm-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  background: rgba(20, 20, 20, 0.7);
+  width: 100%;
+  height: 100%;
+  z-index: 999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.confirm-box {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  text-align: center;
+  width: 350px;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.3);
+}
+
+.confirm-box p {
+  font-size: 18px;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.confirm-box button {
+  padding: 10px 20px;
+  margin: 5px;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.confirm-box button:first-child {
+  background: #d32f2f;
+  color: white;
+}
+
+.confirm-box button:last-child {
+  background: #1e3c72;
+  color: white;
+}

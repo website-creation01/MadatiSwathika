@@ -5,6 +5,9 @@ import Dashboard from "./pages/Dashboard";
 import MyCourses from "./pages/MyCourses";
 import ResultsPage from "./pages/ResultsPage";
 import QuizPage from "./pages/QuizPage";
+import MyProfile from "./pages/MyProfile";
+import ChangePassword from "./pages/ChangePassword";
+import WelcomePage from "./pages/WelcomePage"; // 👈 NEW
 
 function App() {
   return (
@@ -14,13 +17,16 @@ function App() {
         <Route path="/" element={<Register />} />
         <Route path="/login" element={<Login />} />
 
-        {/* Protected Routes */}
+        {/* Dashboard with nested routes */}
         <Route path="/dashboard" element={<Dashboard />}>
-          <Route path="" element={<MyCourses />} />         {/* /dashboard */}
-          <Route path="results" element={<ResultsPage />} />    {/* /dashboard/results */}
+          <Route path="" element={<WelcomePage />} /> {/* 🆕 Default Page */}
+          <Route path="mycourses" element={<MyCourses />} />
+          <Route path="results" element={<ResultsPage />} />
+          <Route path="profile" element={<MyProfile />} />
+          <Route path="change-password" element={<ChangePassword />} />
         </Route>
 
-        {/* Quiz Attempt Page */}
+        {/* Separate quiz page */}
         <Route path="/quiz/:id" element={<QuizPage />} />
       </Routes>
     </BrowserRouter>
