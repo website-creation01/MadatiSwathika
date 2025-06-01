@@ -7,7 +7,8 @@ import ResultsPage from "./pages/ResultsPage";
 import QuizPage from "./pages/QuizPage";
 import MyProfile from "./pages/MyProfile";
 import ChangePassword from "./pages/ChangePassword";
-import WelcomePage from "./pages/WelcomePage"; // 👈 NEW
+import WelcomePage from "./pages/WelcomePage"; 
+import SolutionPage from "./pages/SolutionPage";
 
 function App() {
   return (
@@ -24,10 +25,13 @@ function App() {
           <Route path="results" element={<ResultsPage />} />
           <Route path="profile" element={<MyProfile />} />
           <Route path="change-password" element={<ChangePassword />} />
+          
+
         </Route>
 
         {/* Separate quiz page */}
         <Route path="/quiz/:id" element={<QuizPage />} />
+        <Route path="/solution" element={<SolutionPage />} />
       </Routes>
     </BrowserRouter>
   );
