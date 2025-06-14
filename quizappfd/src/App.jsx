@@ -20,7 +20,7 @@ function App() {
 
         {/* Dashboard with nested routes */}
         <Route path="/dashboard" element={<Dashboard />}>
-          <Route path="" element={<WelcomePage />} /> {/* 🆕 Default Page */}
+          <Route path="" element={<WelcomePage />} /> 
           <Route path="mycourses" element={<MyCourses />} />
           <Route path="results" element={<ResultsPage />} />
           <Route path="profile" element={<MyProfile />} />

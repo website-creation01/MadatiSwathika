@@ -31,7 +31,7 @@ function Login() {
         localStorage.setItem("collegeName", res.data.collegeName || "");
         localStorage.setItem("collegeID", res.data.collegeID || "");
         localStorage.setItem("phone", res.data.phone || "");
-        alert("✅ Login successful!");
+        alert("Login successful!");
         navigate("/dashboard");
       } else {
         setError(` ${res.data.message}`);

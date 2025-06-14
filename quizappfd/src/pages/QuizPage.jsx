@@ -13,21 +13,39 @@ const QuizPage = () => {
   const [tempAnswers, setTempAnswers] = useState({});
   const [reviewFlags, setReviewFlags] = useState({});
   const [timeLeft, setTimeLeft] = useState(1800);
+  const [confirmSubmit, setConfirmSubmit] = useState(false);
   const [showInstructions, setShowInstructions] = useState(true);
   const [showGeneral, setShowGeneral] = useState(false);
-  const [confirmSubmit, setConfirmSubmit] = useState(false);
 
+  const email = localStorage.getItem("userEmail");
+
+  const currentQ = () => quiz?.sections[currentSection]?.questions[currentQIndex];
+  const qid = currentQ()?.id;
+
+  // Fetch quiz and initialize status
   useEffect(() => {
-    axios.get(`http://localhost:5000/api/quizzes/${id}`).then((res) => {
-      setQuiz(res.data);
-    });
-  }, [id]);
+    axios.get(`http://localhost:5000/api/quizzes/${id}`).then((res) => setQuiz(res.data));
 
+    axios.get(`http://localhost:5000/api/quiz-status/${email}/${id}`).then((res) => {
+      const { status } = res.data;
+      if (status === "submitted") {
+        alert("You have already submitted this test.");
+        navigate("/dashboard/results");
+      } else if (status === "in_progress") {
+        // allow resume
+      } else {
+        axios.post("http://localhost:5000/api/start-quiz", { email, quizId: id });
+      }
+    });
+  }, [id, email, navigate]);
+
+  // Timer
   useEffect(() => {
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
+          alert("⏰ Time up! Submitting test...");
           handleSubmit();
           return 0;
         }
@@ -37,18 +55,24 @@ const QuizPage = () => {
     return () => clearInterval(timer);
   }, []);
 
-  const formatTime = (t) => {
-    const m = String(Math.floor(t / 60)).padStart(2, "0");
-    const s = String(t % 60).padStart(2, "0");
-    return `${m}:${s}`;
-  };
+  // Fullscreen + Tab switch monitor
+  useEffect(() => {
+    const goFullScreen = () => {
+      const el = document.documentElement;
+      if (el.requestFullscreen) el.requestFullscreen();
+    };
 
-  if (!quiz) return <div className="loading">Loading...</div>;
+    const onBlur = () => {
+      const confirmed = window.confirm("You switched window/tab. Your test will be submitted.\nContinue?");
+      if (confirmed) handleSubmit();
+    };
 
-  const section = quiz.sections[currentSection];
-  const questions = section.questions;
-  const currentQ = questions[currentQIndex];
-  const qid = currentQ.id;
+    if (!showInstructions && !showGeneral) {
+      goFullScreen();
+      window.addEventListener("blur", onBlur);
+    }
+    return () => window.removeEventListener("blur", onBlur);
+  }, [showInstructions, showGeneral, savedAnswers]);
 
   const handleOptionSelect = (val) => {
     setTempAnswers({ ...tempAnswers, [qid]: val });
@@ -62,9 +86,8 @@ const QuizPage = () => {
   };
 
   const handleSaveAndNext = () => {
-    const updated = { ...savedAnswers, [qid]: tempAnswers[qid] };
-    setSavedAnswers(updated);
-    setCurrentQIndex((i) => Math.min(i + 1, questions.length - 1));
+    setSavedAnswers({ ...savedAnswers, [qid]: tempAnswers[qid] });
+    setCurrentQIndex((i) => Math.min(i + 1, quiz.sections[currentSection].questions.length - 1));
   };
 
   const toggleReview = () => {
@@ -72,54 +95,47 @@ const QuizPage = () => {
   };
 
   const handleSubmit = () => {
-    const email = localStorage.getItem("userEmail");
+    const finalAnswers = { ...savedAnswers, [qid]: tempAnswers[qid] };
     axios
       .post("http://localhost:5000/api/quizzes/submit", {
-        quizId: quiz.id,
-        answers: savedAnswers,
+        quizId: id,
+        answers: finalAnswers,
         email,
       })
       .then((res) => {
         localStorage.setItem("lastResult", JSON.stringify(res.data));
         navigate("/dashboard/results");
+      })
+      .catch((err) => {
+        alert("Submission failed. Try again.");
+        console.error(err);
       });
   };
 
-  const getStatusCounts = () => {
-    let a = 0, u = 0, m = 0, am = 0;
-    quiz.sections.forEach((sec) =>
-      sec.questions.forEach((q) => {
-        const ans = savedAnswers[q.id];
-        const rev = reviewFlags[q.id];
-        if (rev && ans) am++;
-        else if (rev) m++;
-        else if (ans) a++;
-        else u++;
-      })
-    );
-    return { a, u, m, am };
+  const formatTime = (t) => {
+    const m = String(Math.floor(t / 60)).padStart(2, "0");
+    const s = String(t % 60).padStart(2, "0");
+    return `${m}:${s}`;
   };
 
-  const { a, u, m, am } = getStatusCounts();
+  if (!quiz || !currentQ()) return <div className="loading">Loading...</div>;
 
   return (
     <div className="quiz-container">
+      {/* Instruction popups */}
       {showInstructions && (
         <div className="instructions-popup">
           <div className="instruction-box">
             <h2>📋 Instructions</h2>
             <ul>
-              <li>This is a GATE-style test interface.</li>
-              <li>Answer MCQ and NAT questions carefully.</li>
-              <li>Use "Save & Next" to save answers.</li>
-              <li>Click Submit when done.</li>
+              <li>Test duration: 30 minutes</li>
+              <li>Only one attempt is allowed</li>
+              <li>No switching window or tab</li>
             </ul>
             <button onClick={() => {
               setShowInstructions(false);
               setShowGeneral(true);
-            }}>
-              Next
-            </button>
+            }}>Next</button>
           </div>
         </div>
       )}
@@ -129,15 +145,16 @@ const QuizPage = () => {
           <div className="instruction-box">
             <h2>🧾 General Instructions</h2>
             <ul>
-              <li>Test duration: 30 minutes</li>
-              <li>Section-wise navigation is allowed.</li>
-              <li>Click Submit only after completing all questions.</li>
+              <li>Use keypad for NAT answers</li>
+              <li>Save & Next saves your answer</li>
+              <li>Ledger shows answer status</li>
             </ul>
             <button onClick={() => setShowGeneral(false)}>Start Test</button>
           </div>
         </div>
       )}
 
+      {/* Confirm submission popup */}
       {confirmSubmit && (
         <div className="confirm-overlay">
           <div className="confirm-box">
@@ -148,8 +165,9 @@ const QuizPage = () => {
         </div>
       )}
 
+      {/* Quiz UI */}
       <div className="quiz-header">
-        <h2>{quiz.title} | Section: {section.type}</h2>
+        <h2>{quiz.title} | Section: {quiz.sections[currentSection].type}</h2>
         <span className="timer">⏱ {formatTime(timeLeft)}</span>
       </div>
 
@@ -164,15 +182,15 @@ const QuizPage = () => {
             ))}
           </div>
 
-          <h4>Q{currentQIndex + 1}: {currentQ.question}</h4>
+          <h4>Q{currentQIndex + 1}: {currentQ().question}</h4>
 
-          {currentQ.type === "MCQ" ? (
-            currentQ.options.map((opt, i) => (
+          {currentQ().type === "MCQ" ? (
+            currentQ().options.map((opt, i) => (
               <label key={i} className="option">
                 <input
                   type="radio"
                   name={`q-${qid}`}
-                  checked={tempAnswers[qid] === opt}
+                  checked={(savedAnswers[qid] ?? tempAnswers[qid]) === opt}
                   onChange={() => handleOptionSelect(opt)}
                 />
                 {opt}
@@ -193,40 +211,27 @@ const QuizPage = () => {
         </div>
 
         <div className="ledger-panel">
-          <div className="status-box">
-            <div><span className="circle answered" /> Answered: {a}</div>
-            <div><span className="circle not-answered" /> Not Answered: {u}</div>
-            <div><span className="circle marked" /> Marked: {m}</div>
-            <div><span className="circle marked-answered" /> Marked + Answered: {am}</div>
-          </div>
-
           <h4>🧭 Ledger</h4>
-          <div className="ledger scrollable">
-            {quiz.sections.flatMap(s => s.questions).map((q, i) => {
-              let cls = "ledger-btn";
-              const ans = savedAnswers[q.id];
-              const rev = reviewFlags[q.id];
-              if (rev && ans) cls += " marked-answered";
-              else if (rev) cls += " marked";
-              else if (ans) cls += " answered";
-              else cls += " not-answered";
+          {quiz.sections.flatMap((sec) => sec.questions).map((q, i) => {
+            let cls = "ledger-btn";
+            const ans = savedAnswers[q.id];
+            const rev = reviewFlags[q.id];
+            if (rev && ans) cls += " marked-answered";
+            else if (rev) cls += " marked";
+            else if (ans) cls += " answered";
+            else cls += " not-answered";
 
-              return (
-                <button
-                  key={q.id}
-                  className={cls}
-                  onClick={() => {
-                    const secIdx = quiz.sections.findIndex(s => s.questions.includes(q));
-                    const qIdx = quiz.sections[secIdx].questions.indexOf(q);
-                    setCurrentSection(secIdx);
-                    setCurrentQIndex(qIdx);
-                  }}
-                >
-                  {i + 1}
-                </button>
-              );
-            })}
-          </div>
+            return (
+              <button key={q.id} className={cls} onClick={() => {
+                const secIdx = quiz.sections.findIndex(s => s.questions.includes(q));
+                const qIdx = quiz.sections[secIdx].questions.indexOf(q);
+                setCurrentSection(secIdx);
+                setCurrentQIndex(qIdx);
+              }}>
+                {i + 1}
+              </button>
+            );
+          })}
         </div>
       </div>
 

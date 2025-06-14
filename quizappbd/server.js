@@ -10,11 +10,10 @@ require('dotenv').config();
 
 const app = express();
 app.use(cors());
-app.use(express.json());
-app.use('/uploads', express.static('uploads')); // to serve profile images
+app.use(express.json()); 
+app.use('/uploads', express.static('uploads')); // to serve profile images accessable via URL
 
-// In-memory Questions (shared across quizzes)
-
+// Questions array
 const allQuestions = [
   {
     id: 1,
@@ -318,12 +317,7 @@ const allQuestions = [
   }
 ];
 
-
-
-
-
-
-//  Sample Quizzes using question IDs
+//  Sample Quizzes using questions IDs
 const quizzes = {
   1: {
     id: 1,
@@ -353,16 +347,14 @@ app.get("/api/quizzes", (req, res) => {
 });
 
 //  Get Quiz by ID
-
 app.get("/api/quizzes/:id", (req, res) => {
   const quiz = quizzes[req.params.id];
   if (!quiz) return res.status(404).send("Quiz not found");
   console.log("🔍 Quiz Fetched:", quiz.title);
-
-
   res.json(quiz); // Send full quiz with `sections`
 });
 
+//  Get All Questions
 app.get("/api/user/profile/:email", (req, res) => {
   const { email } = req.params;
   const sql = "SELECT fullName, email, phone, collegeName, collegeID, profilePic FROM users WHERE email = ?";
@@ -373,6 +365,7 @@ app.get("/api/user/profile/:email", (req, res) => {
   });
 });
 
+// Change Password
 app.post("/api/user/change-password", async (req, res) => {
   const { email, currentPassword, newPassword } = req.body;
 
@@ -393,14 +386,29 @@ app.post("/api/user/change-password", async (req, res) => {
   });
 });
 
+// Get Quiz Status
+app.get('/api/quiz-status/:email/:quizId', (req, res) => {
+  const { email, quizId } = req.params;
+  const sql = 'SELECT * FROM quiz_attempts WHERE email = ? AND quizId = ? ORDER BY id DESC LIMIT 1';
+  db.query(sql, [email, quizId], (err, results) => {
+    if (err) return res.status(500).json({ error: 'DB error' });
+    res.json(results[0] || { status: 'not_started' });
+  });
+});
+
+// Start Quiz Attempt
+app.post('/api/start-quiz', (req, res) => {
+  const { email, quizId } = req.body;
+  const sql = "INSERT INTO quiz_attempts (email, quizId, status) VALUES (?, ?, 'in_progress')";
+  db.query(sql, [email, quizId], err => {
+    if (err) return res.status(500).json({ error: 'Insert error' });
+    res.json({ message: 'Quiz started' });
+  });
+});
 
 
 // Submit Quiz Answers
 app.post("/api/quizzes/submit", (req, res) => {
-  console.log("🔔 Received Submission:");
-  console.log("Quiz ID:", req.body.quizId);
-  console.log("Email:", req.body.email);
-  console.log("Answers:", req.body.answers);
   const { answers, quizId, email } = req.body;
   const quiz = quizzes[quizId];
   const userName = email.split('@')[0];
@@ -418,7 +426,6 @@ app.post("/api/quizzes/submit", (req, res) => {
       const userAnswer = answers[q.id];
       const isCorrect = userAnswer && userAnswer.toString().trim().toLowerCase() === q.correct.toString().trim().toLowerCase();
       if (isCorrect) score++;
-
       allQuestions.push({
         id: q.id,
         question: q.question,
@@ -430,13 +437,29 @@ app.post("/api/quizzes/submit", (req, res) => {
     });
   });
 
+  const percentage = Math.round((score / total) * 100);
   const result = {
     score,
     total,
-    percentage: Math.round((score / total) * 100),
+    percentage,
     quizId,
     questions: allQuestions
   };
+
+  // Save result to DB
+  const insertSql = `
+    INSERT INTO results (email, quizId, score, total, percentage, answers)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `;
+  db.query(insertSql, [email, quizId, score, total, percentage, JSON.stringify(answers)], (err) => {
+    if (err) console.error(" Failed to save result:", err);
+  });
+
+  //  Update quiz attempt status
+  const updateSql = "UPDATE quiz_attempts SET status = 'submitted' WHERE email = ? AND quizId = ?";
+  db.query(updateSql, [email, quizId], (err) => {
+    if (err) console.error(" Failed to update quiz_attempts:", err);
+  });
 
   //  Send confirmation email
   const transporter = nodemailer.createTransport({
@@ -446,7 +469,6 @@ app.post("/api/quizzes/submit", (req, res) => {
       pass: process.env.EMAIL_PASS
     }
   });
-
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to: email,
@@ -454,15 +476,14 @@ app.post("/api/quizzes/submit", (req, res) => {
     html: `
       <p>Dear <strong>${userName}</strong>,</p>
       <p>Your test has been successfully submitted.</p>
-      <p><strong>Course Name:</strong> GATE - 2025</p>
       <p><strong>Test Name:</strong> Test - ${quizId}</p>
-      <br/>
+      <p><strong>Score:</strong> ${score} / ${total}</p>
+      <p><strong>Percentage:</strong> ${percentage}%</p>
       <p>Best Regards,<br/>nDMatrix</p>
     `
   };
-
-  transporter.sendMail(mailOptions, (err, info) => {
-    if (err) console.error("❌ Email Error:", err.message);
+  transporter.sendMail(mailOptions, (err) => {
+    if (err) console.error(" Email error:", err.message);
   });
 
   res.json(result);
@@ -537,7 +558,7 @@ app.post('/api/auth/register', upload.fields([
   });
 });
 
-//  Login User
+// Login User
 app.post("/api/auth/login", (req, res) => {
   const { email, password } = req.body;
 

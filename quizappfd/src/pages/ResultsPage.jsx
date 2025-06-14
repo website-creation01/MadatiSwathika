@@ -16,7 +16,7 @@ const ResultsPage = () => {
 
   const { score, total, percentage } = result;
 
-  // Dummy rank calculation
+  //  rank calculation
   const rank = Math.max(1, Math.floor(Math.random() * 50));
 
   return (

@@ -3,6 +3,7 @@ import axios from "axios";
 
 function MyCourses() {
   const [quizzes, setQuizzes] = useState([]);
+  
 
   useEffect(() => {
     axios.get("http://localhost:5000/api/quizzes")
